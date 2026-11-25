@@ -1,16 +1,21 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { syncLolMatchesAction } from "@/modules/lol/actions";
+import type { ActionResult } from "@/lib/action-result";
 
-export function SyncButton() {
+type Props = {
+  /** Server action that downloads new matches and reports how many were added. */
+  action: () => Promise<ActionResult<{ added: number }>>;
+};
+
+export function SyncButton({ action }: Props) {
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ text: string; isError: boolean } | null>(null);
 
   function sync() {
     setMessage(null);
     startTransition(async () => {
-      const result = await syncLolMatchesAction();
+      const result = await action();
       if (!result.ok) {
         setMessage({ text: result.error, isError: true });
         return;

@@ -8,11 +8,13 @@ import {
   jsonb,
   pgTable,
   primaryKey,
+  real,
   text,
   timestamp,
   unique,
   uuid,
 } from "drizzle-orm/pg-core";
+import type { Cs2Source } from "@/modules/cs2/domain/types";
 import type { Game, LolRole, TrainingStep } from "@/modules/training/domain/types";
 
 export const trainingSessions = pgTable(
@@ -74,3 +76,38 @@ export const lolAccounts = pgTable("lol_accounts", {
   puuid: text("puuid").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }).enableRLS();
+
+/** Platform handle (e.g. FACEIT nickname) → platform player id. */
+export const cs2Accounts = pgTable(
+  "cs2_accounts",
+  {
+    source: text("source").$type<Cs2Source>().notNull(),
+    handle: text("handle").notNull(),
+    playerId: text("player_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.source, table.handle] })],
+).enableRLS();
+
+export const cs2Matches = pgTable(
+  "cs2_matches",
+  {
+    source: text("source").$type<Cs2Source>().notNull(),
+    matchId: text("match_id").notNull(),
+    playerId: text("player_id").notNull(),
+    playedAt: timestamp("played_at", { withTimezone: true }).notNull(),
+    map: text("map").notNull(),
+    win: boolean("win").notNull(),
+    score: text("score"),
+    kills: integer("kills").notNull(),
+    deaths: integer("deaths").notNull(),
+    assists: integer("assists").notNull(),
+    adr: real("adr").notNull(),
+    headshotRate: real("headshot_rate").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.source, table.playerId, table.matchId] }),
+    index("cs2_matches_player_played_at_idx").on(table.source, table.playerId, table.playedAt),
+  ],
+).enableRLS();

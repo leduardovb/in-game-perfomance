@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
-import { TrendChart } from "@/components/charts/trend-chart";
-import { SyncButton } from "@/components/lol/sync-button";
+import { FilterChips } from "@/components/performance/filter-chips";
+import { StatTile } from "@/components/performance/stat-tile";
+import { SyncButton } from "@/components/performance/sync-button";
+import { TrendGrid, type TrendMetric } from "@/components/performance/trend-grid";
 import { requireAuth } from "@/lib/auth/auth";
+import { shortDateFormatter, type DateFormatter } from "@/lib/date";
 import { getEnv } from "@/lib/env";
-import { formatValue, type ValueFormat } from "@/lib/format";
+import { formatValue } from "@/lib/format";
 import { getLolService } from "@/modules/lol";
-import { csPerMinute, damagePerMinute, kda, rollingAverage } from "@/modules/lol/domain/stats";
+import { syncLolMatchesAction } from "@/modules/lol/actions";
+import { csPerMinute, damagePerMinute, kda } from "@/modules/lol/domain/stats";
 import {
   MATCH_FILTERS,
   MATCH_FILTER_LABELS,
@@ -30,12 +33,12 @@ const POSITION_LABELS: Record<string, string> = {
   UTILITY: "Suporte",
 };
 
-type DateFormatter = (date: Date) => string;
-
-function shortDateFormatter(timeZone: string): DateFormatter {
-  const format = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", timeZone });
-  return (date) => format.format(date);
-}
+const TREND_METRICS: TrendMetric<LolMatch>[] = [
+  { title: "Winrate", format: "percent", value: (match) => (match.win ? 1 : 0) },
+  { title: "KDA", format: "decimal", value: kda },
+  { title: "CS por minuto", format: "decimal", value: csPerMinute },
+  { title: "Dano por minuto", format: "integer", value: damagePerMinute },
+];
 
 function parseFilter(value: string | string[] | undefined): MatchFilter {
   return MATCH_FILTERS.find((filter) => filter === value) ?? "solo";
@@ -60,18 +63,6 @@ export default async function LolPerformancePage({ searchParams }: PageProps<"/d
   const { matches, summary } = await service.getOverview(filter);
   const env = getEnv();
   const formatDate = shortDateFormatter(env.APP_TIMEZONE);
-  const trend = (metric: (match: LolMatch) => number) =>
-    rollingAverage(matches, metric, TREND_WINDOW).map((point) => ({
-      label: formatDate(point.playedAt),
-      value: point.value,
-    }));
-
-  const charts: { title: string; format: ValueFormat; metric: (match: LolMatch) => number }[] = [
-    { title: "Winrate", format: "percent", metric: (match) => (match.win ? 1 : 0) },
-    { title: "KDA", format: "decimal", metric: kda },
-    { title: "CS por minuto", format: "decimal", metric: csPerMinute },
-    { title: "Dano por minuto", format: "integer", metric: damagePerMinute },
-  ];
 
   return (
     <AppShell>
@@ -83,24 +74,20 @@ export default async function LolPerformancePage({ searchParams }: PageProps<"/d
           </p>
         </div>
         {service.isSyncEnabled ? (
-          <SyncButton />
+          <SyncButton action={syncLolMatchesAction} />
         ) : (
           <p className="max-w-40 text-right text-xs text-muted">Configure RIOT_API_KEY para sincronizar.</p>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Filas">
-        {MATCH_FILTERS.map((option) => (
-          <Link
-            key={option}
-            href={`/desempenho/lol?fila=${option}`}
-            aria-current={option === filter ? "true" : undefined}
-            className="rounded-full border border-border px-3 py-1.5 text-sm aria-[current=true]:border-accent aria-[current=true]:bg-accent aria-[current=true]:text-accent-foreground"
-          >
-            {MATCH_FILTER_LABELS[option]}
-          </Link>
-        ))}
-      </div>
+      <FilterChips
+        label="Filas"
+        chips={MATCH_FILTERS.map((option) => ({
+          href: `/desempenho/lol?fila=${option}`,
+          label: MATCH_FILTER_LABELS[option],
+          active: option === filter,
+        }))}
+      />
 
       {!summary ? (
         <p className="text-sm text-muted">
@@ -114,23 +101,14 @@ export default async function LolPerformancePage({ searchParams }: PageProps<"/d
               Últimas {summary.matches} partidas
             </h2>
             <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Stat label="Winrate" value={formatValue(summary.winRate, "percent")} detail={`${summary.wins}V ${summary.matches - summary.wins}D`} />
-              <Stat label="KDA" value={formatValue(summary.kda, "decimal")} />
-              <Stat label="CS/min" value={formatValue(summary.csPerMinute, "decimal")} />
-              <Stat label="Dano/min" value={formatValue(summary.damagePerMinute, "integer")} />
+              <StatTile label="Winrate" value={formatValue(summary.winRate, "percent")} detail={`${summary.wins}V ${summary.matches - summary.wins}D`} />
+              <StatTile label="KDA" value={formatValue(summary.kda, "decimal")} />
+              <StatTile label="CS/min" value={formatValue(summary.csPerMinute, "decimal")} />
+              <StatTile label="Dano/min" value={formatValue(summary.damagePerMinute, "integer")} />
             </dl>
           </section>
 
-          <section aria-labelledby="trend-title" className="flex flex-col gap-2">
-            <h2 id="trend-title" className="text-sm text-muted">
-              Evolução (média das últimas {TREND_WINDOW} partidas)
-            </h2>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {charts.map((chart) => (
-                <TrendChart key={chart.title} title={chart.title} format={chart.format} points={trend(chart.metric)} />
-              ))}
-            </div>
-          </section>
+          <TrendGrid matches={matches} metrics={TREND_METRICS} window={TREND_WINDOW} formatDate={formatDate} />
 
           <section aria-labelledby="matches-title" className="flex flex-col gap-2">
             <h2 id="matches-title" className="text-sm text-muted">
@@ -145,18 +123,6 @@ export default async function LolPerformancePage({ searchParams }: PageProps<"/d
         </>
       )}
     </AppShell>
-  );
-}
-
-function Stat({ label, value, detail }: { label: string; value: string; detail?: string }) {
-  return (
-    <div className="rounded-xl border border-border bg-surface p-3">
-      <dt className="text-xs text-muted">{label}</dt>
-      <dd className="text-lg font-semibold">
-        {value}
-        {detail && <span className="ml-1.5 text-xs font-normal text-muted">{detail}</span>}
-      </dd>
-    </div>
   );
 }
 

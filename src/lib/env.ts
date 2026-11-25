@@ -15,6 +15,10 @@ const envSchema = z.object({
   RIOT_PLATFORM: z.string().trim().toLowerCase().default("br1"),
   /** Without a key the LoL page still shows stored matches but can't sync new ones. */
   RIOT_API_KEY: z.string().trim().min(1).optional(),
+  /** FACEIT nickname tracked by the CS2 page (case-sensitive). */
+  FACEIT_NICKNAME: z.string().trim().min(1).optional(),
+  /** Server-side key from developers.faceit.com. Without it the page only shows stored matches. */
+  FACEIT_API_KEY: z.string().trim().min(1).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

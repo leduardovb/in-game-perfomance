@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const LINKS = [
   { href: "/", label: "Treinos", isActive: (path: string) => path === "/" || path.startsWith("/treino") },
   { href: "/desempenho/lol", label: "LoL", isActive: (path: string) => path.startsWith("/desempenho/lol") },
+  { href: "/desempenho/cs2", label: "CS2", isActive: (path: string) => path.startsWith("/desempenho/cs2") },
 ];
 
 export function NavLinks() {
