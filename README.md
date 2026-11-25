@@ -7,6 +7,7 @@ Web app (PWA, funciona no celular) para acompanhar treinos diários e, nas próx
 - **Treino de hoje** por jogo: 1 hora dividida em etapas com check, mais uma meta de partidas.
 - **LoL**: um treino para cada rota (mid é a padrão; top, jungle, ADC e suporte também). **CS2**: treino geral.
 - **Histórico** dos últimos 60 dias e sequência de dias com treino concluído.
+- **Desempenho no LoL**: sincroniza as últimas partidas pela API da Riot e mostra winrate, KDA, CS/min e dano/min, gráficos de evolução e a lista de partidas (filtro Solo/Duo ou todas em Summoner's Rift).
 - Acesso protegido por senha única (app de um usuário só).
 
 ## Stack
@@ -26,6 +27,12 @@ src/
     infra/                Implementações do repositório (Drizzle e em memória para testes)
     service.ts            Casos de uso (iniciar treino, marcar etapa, partidas, histórico)
     actions.ts            Server Actions: autenticação, validação (zod) e tratamento de erros
+  modules/lol/
+    domain/               Tipos, filas e métricas (KDA, CS/min, média móvel)
+    riot/                 Cliente da API da Riot (validado com zod) e conversão para o domínio
+    infra/                Repositórios Drizzle e em memória
+    service.ts            Sincronização incremental e visão geral
+    actions.ts            Server Action "Atualizar partidas"
   proxy.ts                Redireciona visitantes sem sessão para /login
 drizzle/                  Migrações SQL geradas pelo drizzle-kit
 ```
@@ -44,6 +51,12 @@ npm run db:migrate
 npm run dev
 ```
 
+### League of Legends
+
+- `RIOT_ID` usa o formato `Nome#TAG`. Em arquivos `.env`, coloque entre aspas, porque `#` sem aspas inicia um comentário.
+- `RIOT_API_KEY`: a chave de desenvolvimento expira a cada 24h. Para uso contínuo, peça uma Personal API Key em developer.riotgames.com.
+- "Atualizar partidas" busca as 20 mais recentes e baixa só as que ainda não estão salvas. As páginas leem apenas do banco, sem chamar a Riot. Se a Riot limitar as requisições no meio, o que já foi baixado fica salvo e a próxima sincronização continua de onde parou.
+
 ## Scripts
 
 | Comando | O que faz |
@@ -58,7 +71,7 @@ npm run dev
 ## Deploy (Vercel)
 
 1. Importe o repositório na Vercel.
-2. Cadastre `DATABASE_URL`, `APP_PASSWORD`, `SESSION_SECRET` e `APP_TIMEZONE` em Settings > Environment Variables.
+2. Cadastre `DATABASE_URL`, `APP_PASSWORD`, `SESSION_SECRET`, `APP_TIMEZONE`, `RIOT_ID`, `RIOT_PLATFORM` e `RIOT_API_KEY` em Settings > Environment Variables.
 3. Rode `npm run db:migrate` apontando para o banco de produção antes do primeiro acesso.
 
 No celular, abra o site e use "Adicionar à tela inicial" para instalar como app.
