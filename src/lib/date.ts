@@ -36,3 +36,11 @@ export function formatIsoDate(date: IsoDate): string {
     month: "short",
   }).format(new Date(`${date}T00:00:00Z`));
 }
+
+export type DateFormatter = (date: Date) => string;
+
+/** "25/11"-style formatter in the given time zone. */
+export function shortDateFormatter(timeZone: string): DateFormatter {
+  const format = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", timeZone });
+  return (date) => format.format(date);
+}
