@@ -1,9 +1,13 @@
-/** Where a CS2 match came from. Premier is added when its source is decided. */
-export const CS2_SOURCES = ["faceit"] as const;
+/**
+ * Where a CS2 match came from. FACEIT matches are stored; Leetify (Premier and
+ * matchmaking) matches are only shown live, because Leetify's terms forbid keeping them.
+ */
+export const CS2_SOURCES = ["faceit", "leetify"] as const;
 export type Cs2Source = (typeof CS2_SOURCES)[number];
 
 export const CS2_SOURCE_LABELS: Record<Cs2Source, string> = {
   faceit: "FACEIT",
+  leetify: "Premier/MM",
 };
 
 /** One CS2 match from the tracked player's point of view. */

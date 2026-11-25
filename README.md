@@ -9,6 +9,7 @@ Web app (PWA, funciona no celular) para acompanhar treinos diários e, nas próx
 - **Histórico** dos últimos 60 dias e sequência de dias com treino concluído.
 - **Desempenho no LoL**: sincroniza as últimas partidas pela API da Riot e mostra winrate, KDA, CS/min e dano/min, gráficos de evolução e a lista de partidas (filtro Solo/Duo ou todas em Summoner's Rift).
 - **Desempenho no CS2 (FACEIT)**: sincroniza as últimas 50 partidas pela API oficial da FACEIT e mostra winrate, K/D, ADR e HS%, gráficos de evolução e a lista de partidas.
+- **CS2 Premier/matchmaking (Leetify)**: mostra ao vivo as partidas que o Leetify lista, sem salvar nada (exigência dos termos do Leetify).
 - Acesso protegido por senha única (app de um usuário só).
 
 ## Stack
@@ -64,6 +65,12 @@ npm run dev
 - `FACEIT_NICKNAME` diferencia maiúsculas de minúsculas. `FACEIT_API_KEY` é uma chave "Server side" criada em developers.faceit.com.
 - Uma única requisição traz as estatísticas das últimas 50 partidas. Só as novas são salvas.
 
+### CS2 Premier (Leetify)
+
+- `LEETIFY_STEAM64_ID`: seu Steam64 ID (17 dígitos). `LEETIFY_API_KEY` é opcional.
+- Os termos do Leetify proíbem guardar os dados dele além de um cache de até 8h e proíbem montar histórico com eles. Por isso a aba Premier lê a API a cada visita, com cache de 1h, e nada vai para o banco. A atribuição exigida ("Data Provided by Leetify" e "View on Leetify") aparece no rodapé da aba.
+- Partidas da FACEIT que também aparecem no Leetify são ignoradas ali, porque já vêm do histórico salvo da FACEIT.
+
 ## Scripts
 
 | Comando | O que faz |
@@ -78,7 +85,7 @@ npm run dev
 ## Deploy (Vercel)
 
 1. Importe o repositório na Vercel.
-2. Cadastre `DATABASE_URL`, `APP_PASSWORD`, `SESSION_SECRET`, `APP_TIMEZONE`, `RIOT_ID`, `RIOT_PLATFORM`, `RIOT_API_KEY`, `FACEIT_NICKNAME` e `FACEIT_API_KEY` em Settings > Environment Variables.
+2. Cadastre `DATABASE_URL`, `APP_PASSWORD`, `SESSION_SECRET`, `APP_TIMEZONE`, `RIOT_ID`, `RIOT_PLATFORM`, `RIOT_API_KEY`, `FACEIT_NICKNAME`, `FACEIT_API_KEY`, `LEETIFY_STEAM64_ID` e `LEETIFY_API_KEY` em Settings > Environment Variables.
 3. Rode `npm run db:migrate` apontando para o banco de produção antes do primeiro acesso.
 
 No celular, abra o site e use "Adicionar à tela inicial" para instalar como app.

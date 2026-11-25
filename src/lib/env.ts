@@ -19,6 +19,14 @@ const envSchema = z.object({
   FACEIT_NICKNAME: z.string().trim().min(1).optional(),
   /** Server-side key from developers.faceit.com. Without it the page only shows stored matches. */
   FACEIT_API_KEY: z.string().trim().min(1).optional(),
+  /** Steam64 ID (17 digits) used to read Premier/matchmaking matches from Leetify. */
+  LEETIFY_STEAM64_ID: z
+    .string()
+    .trim()
+    .regex(/^7656\d{13}$/, "LEETIFY_STEAM64_ID deve ser um Steam64 ID de 17 dígitos (começa com 7656)")
+    .optional(),
+  /** Optional: Leetify works without a key, with stricter rate limits. */
+  LEETIFY_API_KEY: z.string().trim().min(1).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
