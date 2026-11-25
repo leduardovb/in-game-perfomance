@@ -8,6 +8,20 @@
       "when": 1795647919299,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795648325763,
+      "tag": "0001_lol_matches",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795648858963,
+      "tag": "0002_cs2_matches",
+      "breakpoints": true
     }
   ]
 }
