@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f6f7f9;
+  --surface: #ffffff;
+  --border: #e3e6eb;
+  --foreground: #14171c;
+  --muted: #5d6573;
+  --accent: #2f6fe4;
+  --accent-foreground: #ffffff;
+  --success: #1f9d55;
+  --danger: #c93b3b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0e1116;
+    --surface: #171b22;
+    --border: #272d38;
+    --foreground: #e8ebf0;
+    --muted: #98a1b0;
+    --accent: #5b8ff0;
+    --accent-foreground: #0e1116;
+    --success: #3cc17a;
+    --danger: #f07171;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
